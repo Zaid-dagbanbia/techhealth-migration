@@ -23,7 +23,24 @@ export class TechhealthMigrationStack extends cdk.Stack {
           subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
         },
       ],
+    });
+
+    // Security Group for EC2(Allows SSH & App Traffic)
+    const ec2SecurityGroup = new ec2.SecurityGroup(this,'EC2SecurityGroup',{
+      vpc,
+      allowAllOutbound: true,
+      description: 'Security group for EC2 instance'
+    });
+    ec2SecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(22), 'Allow SSH');
+    ec2SecurityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(80), 'Allow HTTP');
+
+    // Security Group for RDS (Allows traffic from EC2)
+    const rdsSecurityGroup = new ec2.SecurityGroup(this,'RDSSecurityGroup',{
+      vpc,
+      allowAllOutbound: true,
+      description: 'Security group for RDS instance'
     })
+    rdsSecurityGroup.addIngressRule(ec2SecurityGroup,ec2.Port.tcp(3306),'Allow MySQL from EC2')
 
     
   }
