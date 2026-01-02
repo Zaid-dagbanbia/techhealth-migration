@@ -1,106 +1,186 @@
-# 🏗️ Project Architecture
-## Overview
+# 🏥 TechHealth Migration : How I Secured a Healthcare App on AWS Using CDK.
 
-This project implements a secure healthcare infrastructure on AWS using Infrastructure as Code (IaC) with AWS CDK (TypeScript). The architecture enforces strong network segmentation, least-privilege access, and full traceability, ensuring sensitive patient data is protected at all times.
+Security-First Healthcare Infrastructure on AWS using CDK (TypeScript)
 
-## Architecture Components
+Note: This is a proof of concept / prototype case study built for learning and portfolio purposes.
+The architecture and decisions reflect real-world healthcare security and compliance considerations.
 
-## VPC Network Layer
+## Scenario considered:
 
-* Multi-AZ Virtual Private Cloud
+Five years ago, TechHealth launched its patient portal on AWS using manual, console-based infrastructure. While this worked initially, over time it led to:
 
-* Public subnets for application access
+- Slow, error-prone deployments
 
-* Private isolated subnets for sensitive data
+- Environment inconsistencies
 
-* No direct internet access to database resources
+- Hard-to-audit security configurations
 
-* Controlled routing and traffic flow
+- No reliable rollback strategy
 
-## EC2 Application Layer
+To support growth and meet healthcare security expectations, the infrastructure needed to be automated, version-controlled, and secure by design.
 
-* Hosts the patient portal application
+## 📌 Project Overview
 
-* Deployed in public subnets
+TechHealth Migration is a self-directed Infrastructure as Code (IaC) project that demonstrates how to design, secure, and deploy a healthcare web application on AWS using the AWS Cloud Development Kit (CDK) and TypeScript.
 
-* Receives HTTPS traffic from users
+The project focuses on:
 
-* Communicates securely with the database
+* Network segmentation
 
-* Uses IAM roles instead of static credentials
+* Least-privilege security
 
-## RDS Database Layer
+* Secure database access
 
-* MySQL database deployed in private isolated subnets
+* Infrastructure consistency and traceability
 
-* Not publicly accessible
+All infrastructure is defined as code, version-controlled, and reproducible.
 
-* Accepts connections only from EC2 security group
+## 🏗️ Architecture Summary
 
-* Credentials managed via AWS Secrets Manager
+This project deploys a three-tier AWS architecture:
 
-* Ensures data durability and consistency
+* VPC (Network Layer)
 
-## Security Groups
+  Multi-AZ VPC with public and private isolated subnets
 
-** EC2 Security Group:
+* EC2 (Application Layer)
 
-* Allows HTTPS (443) from the internet
+  Public-facing application server with controlled access
 
-* Allows administrative access via SSH or SSM
+* RDS MySQL (Data Layer)
 
-**  RDS Security Group:
+  Private, isolated database with no internet exposure
 
-* Allows MySQL (3306) only from EC2
+## High-Level Design
+![High - level Design](image.png)
 
-* Blocks all public access
 
-## IAM Authorization
+✔️ Database is unreachable from the internet
 
-* Role-based access control
+✔️ Only EC2 can communicate with RDS
 
-* Least privilege permissions
+✔️ Admin access handled via AWS Systems Manager (no SSH)
 
-* Secure service-to-service communication
+![Architecture design](<AWS Migration .png>)
 
-* Infrastructure permissions managed via code
 
-## Data Flow
+## 🔐 Security-First Design
 
-1. Patient accesses the portal via HTTPS.
+Security was treated as a core requirement, not an afterthought.
 
-1. Request reaches EC2 instance in the public subnet.
+### Network Segmentation
 
-1. Security groups validate and allow traffic.
+* Public subnets host application resources
 
-1. Application processes the request.
+* Private isolated subnets host the database
 
-1. EC2 connects to RDS through private networking.
+* No NAT Gateways → reduced attack surface and lower cost
 
-1. RDS returns authorized patient data.
+### Security Groups (Least Privilege)
 
-1. Response is securely returned to the patient.
+- EC2: allows HTTP traffic from the internet
+- Allows administrative access  SSM
 
-## Infrastructure Management
+- RDS: allows MySQL traffic only from EC2
 
-* Infrastructure defined using AWS CDK
+![alt text](security_gp.png)
 
-* Version-controlled via Git
+### Identity & Access Management
 
-* Changes reviewed through pull requests
+* EC2 uses an IAM role with AmazonSSMManagedInstanceCore
 
-* CDK synthesizes CloudFormation templates
+* No SSH keys, no exposed port 22
 
-* Deployments are repeatable and auditable
+* Secure instance access via AWS Systems Manager
 
-## Key Benefits
+### Credential Management
 
-* Strong network segmentation
+* Database credentials generated automatically
 
-* Secure handling of patient data
+* Stored securely in AWS Secrets Manager
 
-* Reduced attack surface
+* No hardcoded passwords in code or config files
 
-* High maintainability and traceability
+## 🧩 Key AWS Services Used
 
-* Consistent environments across deployments
+* AWS CDK (TypeScript)
+
+* Amazon VPC
+
+* Amazon EC2
+
+* Amazon RDS (MySQL 8.0)
+
+* AWS IAM
+
+* AWS Systems Manager
+
+* AWS Secrets Manager
+
+## 📄 Infrastructure Code Highlights
+
+### Security Group Isolation Between EC2 and RDS
+![alt text](image-1.png)
+
+### Secure Database Credentials
+![alt text](image-2.png)
+
+
+## 💰 Cost Considerations
+
+* No NAT Gateways (significant cost savings)
+
+* t3.micro EC2 and RDS instances
+
+* Development-friendly cleanup with:
+
+![alt text](image-3.png)
+
+
+⚠️ In production environments, the database removal policy should be set to RETAIN.
+
+## 🚀 Deployment Instructions
+### Prerequisites
+
+* AWS CLI configured
+
+* Node.js (v18+ recommended)
+
+* AWS CDK installed
+
+   *npm install -g aws-cdk*
+
+### Deploy the Stack
+- npm install
+- cdk bootstrap
+- cdk deploy
+
+### Tear Down Resources
+ *cdk destroy*
+
+## 📈 What This Project Demonstrates
+
+- Real-world AWS architecture patterns
+
+- Infrastructure as Code best practices
+
+- Security group design and network isolation
+
+- Secure credential handling
+
+- Cost-aware cloud design
+
+- Clear documentation and traceability
+
+## 🔮 Future Enhancements
+
+- Application Load Balancer (ALB)
+
+- Auto Scaling Group for EC2
+
+- HTTPS with ACM certificates
+
+- CI/CD pipeline using GitHub Actions
+
+- RDS Multi-AZ for production-grade HA
+
